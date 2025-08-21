@@ -4,6 +4,13 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.5">
 <link rel="manifest" href="manifest.json">
+
+<!-- Highlight.js CSS & JS -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/javascript.min.js"></script>
+<script>hljs.highlightAll();</script>
+
 <title>CatBot PWA</title>
 <style>
 :root{
@@ -64,6 +71,9 @@ header img { width:40px; height:40px; border-radius:50% }
   word-wrap:break-word;
   position:relative;
   font-size:18px;
+
+  white-space: pre-line;  /* <- ini biar \n jadi baris baru */
+  line-height: 1.6;       /* <- jarak antar kalimat lebih enak */
 }
 .user { align-self:flex-end; background:var(--me); border-top-right-radius:4px }
 .bot { align-self:flex-start; background:var(--other); border-top-left-radius:4px }
@@ -149,7 +159,7 @@ footer {
 /* ===== Popup Media ===== */
 #mediaPopup {
   display:none;
-  position: fixed;
+  position: absolute;
   bottom: 20px;
   left:50%;
   transform:translateX(-50%);
@@ -172,7 +182,7 @@ footer {
   padding:10px;
   border-radius:8px;
   background:#eee;
-  text-align:center;
+  text-align:left;
   cursor:pointer;
 }
 .closePopup {
@@ -195,7 +205,24 @@ input, select { width:100%; padding:8px; border:1px solid #0002; border-radius:8
 .btnRow { display:flex; gap:8px; margin-top:10px }
 .btn { flex:1; padding:10px; border:none; border-radius:8px; cursor:pointer }
 .primary { background:var(--wa-green); color:#fff }
-.danger { background:#eee }
+.danger { background:#eee 
+}
+
+.toast {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  background-color: #333;
+  color: #fff;
+  padding: 10px 20px;
+  border-radius: 5px;
+  opacity: 1;
+  transition: opacity 0.5s ease-out; /* Animasi saat hilang */
+}
+
+.toast.fade-out {
+  opacity: 0;
+}
 </style>
 </head>
 
@@ -226,7 +253,7 @@ input, select { width:100%; padding:8px; border:1px solid #0002; border-radius:8
     <div class="mediaBtn" id="btnCamera">📷 Kamera</div>
     <div class="mediaBtn" id="btnPhoto">🖼️ Foto</div>
     <div class="mediaBtn" id="btnFile">📎 File</div>
-    <div class="mediaBtn" id="btnClearChat">🧹 Bersihkan Chat</div>
+    <div class="mediaBtn" id="btnClearChat">🧹 Clear Chat</div>
     <button class="closePopup">✕</button>
   </div>
 </div>
