@@ -1,6 +1,10 @@
 CatBot AI 🐱🤖
 
-CatBot AI adalah chatbot web yang interaktif dan fleksibel, bisa dijalankan offline/lokal maupun online via API. Didesain untuk pengguna yang ingin chatbot pintar dengan dua mode operasi dan dua API key untuk integrasi AI eksternal.
+CatBot AI New Custom 2025 chatbot web yang interaktif dan fleksibel, bisa dijalankan offline/lokal maupun online via 2 API. 
+* gemini
+* OpenAi
+
+Didesain untuk pengguna yang ingin chatbot pintar dengan dua mode operasi dan dua API key untuk integrasi AI eksternal. terdapapat fitur copy paste setiap percapakan
 
 
 ---
@@ -24,7 +28,7 @@ Dukungan Multimedia
 Embed gambar dan video langsung di chat
 
 
-Dua API Key
+Dua API Key gemini & Open Ai
 
 Bisa mengatur dua API key berbeda untuk panggilan AI eksternal
 
