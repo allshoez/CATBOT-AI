@@ -5,13 +5,13 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.5">
 <title>CatBot PWA</title>
 <style>
-:root{
+:root {
   --wa-green:#075e54;
   --bg:#ece5dd;
   --me:#dcf8c6;
   --other:#fff;
 }
-body { margin:0; font-family: Segoe UI, sans-serif; background: var(--bg); font-size: 18px; }
+body { margin:0; font-family: Segoe UI, sans-serif; background: var(--bg); font-size: 16px; }
 header {
   display:flex; align-items:center; justify-content:space-between;
   background: var(--wa-green); color:#fff; padding:10px 12px;
@@ -24,38 +24,35 @@ header img { width:40px; height:40px; border-radius:50% }
 .actions { display:flex; align-items:center; gap:8px }
 .chip { font-size:12px; padding:6px 10px; border-radius:999px; background:#ffffff26; cursor:pointer }
 .fab { background:none; border:none; color:#fff; font-size:22px; cursor:pointer }
+
+/* Chat */
 #chat { padding:12px; min-height: calc(100vh - 120px); display:flex; flex-direction:column; gap:8px; overflow-y:auto; }
-.msg {
-  max-width:80%; padding:10px 12px; border-radius:10px; box-shadow:0 1px 1px #0001;
-  word-wrap:break-word; position:relative; font-size:18px; white-space: pre-line; line-height: 1.6;
-}
+.msg { max-width:80%; padding:10px 12px; border-radius:10px; box-shadow:0 1px 1px #0001; word-wrap:break-word; position:relative; font-size:16px; white-space: pre-line; line-height:1.5; }
 .user { align-self:flex-end; background:var(--me); border-top-right-radius:4px }
 .bot { align-self:flex-start; background:var(--other); border-top-left-radius:4px }
-.copyBtn {
-  position: absolute; top: 4px; right: 4px; background: none; border: none;
-  font-size: 14px; cursor: pointer; opacity: 0; transition: opacity .2s;
-}
+.copyBtn { position:absolute; top:4px; right:4px; background:none; border:none; font-size:14px; cursor:pointer; opacity:0; transition:opacity .2s; }
 .msg:hover .copyBtn { opacity:0.7 }
-.msg:hover .copyBtn:hover { opacity:1 }
+
+/* Footer */
 footer { position:sticky; bottom:0; background:#fff; border-top:1px solid #0001; padding:10px; }
 .row { display:flex; gap:8px; align-items:center }
-#prompt { flex:1; resize:none; height:42px; padding:10px; border:1px solid #0002; border-radius:22px; font-size:18px; }
+#prompt { flex:1; resize:none; height:42px; padding:10px; border:1px solid #0002; border-radius:22px; font-size:16px; }
 .send { background:var(--wa-green); color:#fff; border:none; border-radius:50%; width:42px; height:42px; cursor:pointer; }
 .clear { background:#eee; border:none; border-radius:50px; padding:0 12px; font-size:13px; cursor:pointer }
+
+/* Menu Popup */
 .menu-popup { position:absolute; top:50px; right:10px; background:#fff; border:1px solid #ccc; border-radius:5px; display:none; flex-direction:column; min-width:150px; z-index:1002; }
 .menu-popup.show { display:flex; }
-.menu-popup button, .menu-popup label { padding:10px; text-align:left; border:none; background:none; width:100%; cursor:pointer; font-size:16px; color:#000; }
+.menu-popup button, .menu-popup label { padding:10px; text-align:left; border:none; background:none; width:100%; cursor:pointer; font-size:14px; color:#000; }
 .menu-popup button:hover, .menu-popup label:hover { background:#f0f0f0; }
-#modalJawab, #modalEditJawab, #modalAllRules {
-  display:none; position:fixed; top:0; left:0; width:100%; height:100%;
-  background:rgba(0,0,0,0.5); justify-content:center; align-items:center; z-index:1003;
-}
-#modalJawab > div, #modalEditJawab > div, #modalAllRules > div {
-  background:#fff; padding:20px; border-radius:10px; width:90%; max-width:500px;
-  display:flex; flex-direction:column; box-shadow:0 5px 15px rgba(0,0,0,0.3);
-}
+
+/* Modal */
+.modal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); justify-content:center; align-items:center; z-index:2000; }
+.modal > div { background:#fff; padding:20px; border-radius:10px; width:90%; max-width:400px; position:relative; }
+.modal h3 { margin-top:0; }
 </style>
 </head>
+
 <body>
 <header>
   <div class="left">
@@ -68,14 +65,17 @@ footer { position:sticky; bottom:0; background:#fff; border-top:1px solid #0001;
       <input type="file" accept="application/json" onchange="uploadData(event)" style="display:none;">
     </label>
     <button onclick="downloadData()">Download Data</button>
-    <button onclick="bukaModalAllRules()">Edit Data</button>
+    <button onclick="openEditData()">Edit Data</button>
+    <button onclick="openSettings()">Pengaturan API</button>
   </div>
   <div class="actions">
-    <span id="providerBadge" class="chip">CatBot</span>
+    <span id="providerBadge" class="chip">Local</span>
     <button id="openPopup" class="fab">+</button>
   </div>
 </header>
+
 <main id="chat"></main>
+
 <footer>
   <div class="row">
     <button id="btnClear" class="clear">=</button>
@@ -84,173 +84,117 @@ footer { position:sticky; bottom:0; background:#fff; border-top:1px solid #0001;
   </div>
 </footer>
 
-<!-- Modal Tambah Jawaban -->
-<div id="modalJawab">
+<!-- Modal Edit Rules -->
+<div id="modalEdit" class="modal">
   <div>
-    <h3>Jawaban Baru</h3>
-    <p id="pertanyaanBaru" style="font-style:italic"></p>
-    <textarea id="inputJawabanBaru" placeholder="Tulis jawaban..."></textarea>
-    <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:10px;">
-      <button onclick="simpanJawabanBaru()" style="background:#075e54; color:#fff; border:none; padding:8px 15px; border-radius:5px;">Simpan</button>
-      <button onclick="tutupModal()" style="background:#ccc; border:none; padding:8px 15px; border-radius:5px;">Batal</button>
+    <h3>Edit Rules</h3>
+    <textarea id="editArea" style="width:100%;height:200px;"></textarea>
+    <div style="margin-top:10px; text-align:right;">
+      <button onclick="saveRules()">Simpan</button>
+      <button onclick="closeModal('modalEdit')">Tutup</button>
     </div>
   </div>
 </div>
 
-<!-- Modal Edit Jawaban -->
-<div id="modalEditJawab">
+<!-- Modal Settings -->
+<div id="modalSettings" class="modal">
   <div>
-    <h3>Edit Jawaban untuk: <span id="pertanyaanEdit"></span></h3>
-    <ul id="listJawaban" style="max-height:200px; overflow-y:auto; padding-left:20px"></ul>
-    <input id="inputJawabanEdit" placeholder="Tambah jawaban baru..."/>
-    <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:10px;">
-      <button onclick="tambahJawabanEdit()" style="background:#075e54; color:#fff; border:none; padding:8px 15px; border-radius:5px;">Tambah</button>
-      <button onclick="tutupModalEdit()" style="background:#ccc; border:none; padding:8px 15px; border-radius:5px;">Tutup</button>
-    </div>
-  </div>
-</div>
+    <button onclick="closeModal('modalSettings')" style="position:absolute;top:10px;right:10px;border:none;background:none;font-size:20px;cursor:pointer">✖</button>
+    <h3>⚙️ Pengaturan API</h3>
 
-<!-- Modal Edit Semua Rules -->
-<div id="modalAllRules">
-  <div>
-    <h3>Edit Semua Data Rules</h3>
-    <textarea id="rulesTextarea" style="width:100%; height:300px; font-family:monospace;"></textarea>
-    <div style="margin-top:10px; display:flex; gap:10px; justify-content:flex-end;">
-      <button onclick="simpanSemuaRules()" style="background:#075e54; color:#fff; border:none; padding:8px 15px; border-radius:5px;">Simpan</button>
-      <button onclick="tutupModalAllRules()" style="background:#ccc; border:none; padding:8px 15px; border-radius:5px;">Tutup</button>
+    <label>Provider:</label>
+    <select id="providerSel" style="width:100%; padding:8px; margin-bottom:10px;">
+      <option value="local">Local (Rules)</option>
+      <option value="gemini">Gemini</option>
+      <option value="openai">OpenAI</option>
+    </select>
+
+    <label>System Prompt:</label>
+    <textarea id="systemPrompt" style="width:100%;height:60px;margin-bottom:10px;"></textarea>
+
+    <h4>🔑 Gemini</h4>
+    <input id="geminiKey" placeholder="API Key Gemini" style="width:100%;padding:8px;margin-bottom:6px;">
+    <input id="geminiModel" value="gemini-1.5-flash" style="width:100%;padding:8px;margin-bottom:6px;">
+    <input id="gemTemp" type="number" value="1" step="0.1" style="width:100%;padding:8px;margin-bottom:10px;">
+
+    <h4>🔑 OpenAI</h4>
+    <input id="openaiKey" placeholder="API Key OpenAI" style="width:100%;padding:8px;margin-bottom:6px;">
+    <input id="openaiModel" value="gpt-4o-mini" style="width:100%;padding:8px;margin-bottom:6px;">
+    <input id="oaTemp" type="number" value="1" step="0.1" style="width:100%;padding:8px;margin-bottom:10px;">
+
+    <div style="display:flex;gap:10px;justify-content:flex-end;">
+      <button id="btnSave">Simpan</button>
     </div>
   </div>
 </div>
-<script src="script.js"></script>
 
 <script>
-let pertanyaanAktif = "";
-function tampilkanPesan(sender, teks) {
+let rules = JSON.parse(localStorage.getItem("botRules") || "[]");
+let provider = localStorage.getItem("provider") || "local";
+
+// UI
+function addMessage(txt, who="bot"){
   const chat = document.getElementById("chat");
   const div = document.createElement("div");
-  div.className = "msg " + sender;
-  div.innerHTML = `${teks}<button class="copyBtn" onclick="navigator.clipboard.writeText(\`${teks}\`)">📋</button>`;
+  div.className = "msg " + who;
+  div.innerHTML = txt;
   chat.appendChild(div);
   chat.scrollTop = chat.scrollHeight;
 }
-function updateProviderBadge() {
-  const provider = localStorage.getItem("provider") || "local";
-  document.getElementById("providerBadge").innerText =
-    provider === "local" ? "CatBot" : provider.charAt(0).toUpperCase() + provider.slice(1);
+function toggleMenu(){ document.getElementById("menuPopup").classList.toggle("show"); }
+function closeModal(id){ document.getElementById(id).style.display="none"; }
+function openEditData(){
+  document.getElementById("editArea").value = JSON.stringify(rules, null, 2);
+  document.getElementById("modalEdit").style.display="flex";
 }
-async function sendMessage(msg) {
-  const provider = localStorage.getItem("provider") || "local";
-  tampilkanPesan("user", msg);
-  if (provider === "local") {
-    let rules = JSON.parse(localStorage.getItem("botRules") || "[]");
-    let rule = rules.find(r => r.Tanya.toLowerCase() === msg.toLowerCase());
-    if (rule) {
-      tampilkanPesan("bot", rule.Jawab[Math.floor(Math.random() * rule.Jawab.length)]);
-    } else {
-      tampilkanPesan("bot", "Apa jawabannya?");
-      bukaModalJawab(msg);
-    }
-    return;
-  }
-  if (provider === "gemini") {
-    tampilkanPesan("bot", "⏳ Tunggu jawaban Gemini...");
-    return;
-  }
-  if (provider === "openai") {
-    tampilkanPesan("bot", "⏳ Tunggu jawaban OpenAI...");
-    return;
-  }
-}
-// Modal Jawaban Baru
-function bukaModalJawab(pertanyaan) {
-  pertanyaanAktif = pertanyaan;
-  document.getElementById("pertanyaanBaru").innerText = pertanyaan;
-  document.getElementById("inputJawabanBaru").value = "";
-  document.getElementById("modalJawab").style.display = "flex";
-}
-function tutupModal() {
-  document.getElementById("modalJawab").style.display = "none";
-}
-function simpanJawabanBaru() {
-  const jawaban = document.getElementById("inputJawabanBaru").value.trim();
-  if (!jawaban) { alert("Jawaban tidak boleh kosong!"); return; }
-  let rules = JSON.parse(localStorage.getItem("botRules") || "[]");
-  let rule = rules.find(r => r.Tanya === pertanyaanAktif);
-  if (rule) { rule.Jawab.push(jawaban); }
-  else { rules.push({ Tanya: pertanyaanAktif, Jawab: [jawaban] }); }
-  localStorage.setItem("botRules", JSON.stringify(rules));
-  tutupModal();
-  tampilkanPesan("bot", jawaban);
-}
-// Modal Edit Jawaban
-function bukaModalEdit(pertanyaan) {
-  pertanyaanAktif = pertanyaan;
-  document.getElementById("pertanyaanEdit").innerText = pertanyaan;
-  let rules = JSON.parse(localStorage.getItem("botRules") || "[]");
-  let rule = rules.find(r => r.Tanya === pertanyaan);
-  let list = document.getElementById("listJawaban");
-  list.innerHTML = "";
-  if (rule) {
-    rule.Jawab.forEach((j, idx) => {
-      let li = document.createElement("li");
-      li.innerHTML = `${j} <button onclick="hapusJawaban(${idx})" style="margin-left:10px; font-size:12px;">❌</button>`;
-      list.appendChild(li);
-    });
-  }
-  document.getElementById("modalEditJawab").style.display = "flex";
-}
-function tambahJawabanEdit() {
-  const jawaban = document.getElementById("inputJawabanEdit").value.trim();
-  if (!jawaban) return;
-  let rules = JSON.parse(localStorage.getItem("botRules") || "[]");
-  let rule = rules.find(r => r.Tanya === pertanyaanAktif);
-  if (rule) { rule.Jawab.push(jawaban); }
-  localStorage.setItem("botRules", JSON.stringify(rules));
-  document.getElementById("inputJawabanEdit").value = "";
-  bukaModalEdit(pertanyaanAktif);
-}
-function hapusJawaban(idx) {
-  let rules = JSON.parse(localStorage.getItem("botRules") || "[]");
-  let rule = rules.find(r => r.Tanya === pertanyaanAktif);
-  if (rule) {
-    rule.Jawab.splice(idx, 1);
+function saveRules(){
+  try{
+    rules = JSON.parse(document.getElementById("editArea").value);
     localStorage.setItem("botRules", JSON.stringify(rules));
-    bukaModalEdit(pertanyaanAktif);
+    closeModal("modalEdit");
+    alert("Rules tersimpan!");
+  }catch(e){ alert("Format JSON salah!"); }
+}
+function openSettings(){
+  document.getElementById("providerSel").value = provider;
+  document.getElementById("systemPrompt").value = localStorage.getItem("systemPrompt")||"";
+  document.getElementById("geminiKey").value = localStorage.getItem("geminiKey")||"";
+  document.getElementById("openaiKey").value = localStorage.getItem("openaiKey")||"";
+  document.getElementById("modalSettings").style.display="flex";
+}
+document.getElementById("btnSave").onclick = ()=>{
+  provider = document.getElementById("providerSel").value;
+  localStorage.setItem("provider", provider);
+  localStorage.setItem("systemPrompt", document.getElementById("systemPrompt").value);
+  localStorage.setItem("geminiKey", document.getElementById("geminiKey").value);
+  localStorage.setItem("openaiKey", document.getElementById("openaiKey").value);
+  document.getElementById("providerBadge").innerText = provider;
+  closeModal("modalSettings");
+};
+
+// Chat logic
+function sendMessage(txt){
+  addMessage(txt,"user");
+  if(provider==="local"){
+    let found = rules.find(r=>r.Tanya.toLowerCase()===txt.toLowerCase());
+    if(found){
+      let jawab = Array.isArray(found.Jawab)? found.Jawab[Math.floor(Math.random()*found.Jawab.length)] : found.Jawab;
+      addMessage(jawab,"bot");
+    }else{
+      addMessage("❓ Tidak ada jawaban. Tambahkan via Edit Data.","bot");
+    }
+  }else{
+    addMessage("⏳ Tunggu jawaban dari "+provider,"bot");
   }
 }
-function tutupModalEdit() {
-  document.getElementById("modalEditJawab").style.display = "none";
-}
-// Modal Semua Rules
-function bukaModalAllRules() {
-  let rules = JSON.parse(localStorage.getItem("botRules") || "[]");
-  document.getElementById("rulesTextarea").value = JSON.stringify(rules, null, 2);
-  document.getElementById("modalAllRules").style.display = "flex";
-}
-function tutupModalAllRules() {
-  document.getElementById("modalAllRules").style.display = "none";
-}
-function simpanSemuaRules() {
-  try {
-    let data = JSON.parse(document.getElementById("rulesTextarea").value);
-    localStorage.setItem("botRules", JSON.stringify(data));
-    alert("✅ Rules berhasil disimpan");
-    tutupModalAllRules();
-  } catch(e) { alert("❌ Format JSON salah!"); }
-}
-// Menu
-function toggleMenu() { document.getElementById("menuPopup").classList.toggle("show"); }
-document.addEventListener("click", e => {
-  const menu = document.getElementById("menuPopup");
-  const tombol = e.target.closest("header span");
-  if (!tombol && !menu.contains(e.target)) { menu.classList.remove("show"); }
-});
-// Event
-document.getElementById("btnSend").addEventListener("click", () => {
-  const txt = document.getElementById("prompt").value.trim();
-  if (txt) { document.getElementById("prompt").value = ""; sendMessage(txt); }
-});
-updateProviderBadge();
+document.getElementById("btnSend").onclick=()=>{
+  const txt=document.getElementById("prompt").value.trim();
+  if(txt){ document.getElementById("prompt").value=""; sendMessage(txt); }
+};
+document.getElementById("btnClear").onclick=()=>{ document.getElementById("chat").innerHTML=""; };
+
+// init
+document.getElementById("providerBadge").innerText = provider;
 </script>
 </body>
 </html>
