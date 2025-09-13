@@ -1,214 +1,334 @@
-<!DOCTYPE html>
-<html lang="id">
-<head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.5">
-<title>CatBot PWA</title>
-<style>
-:root {
-  --wa-green:#075e54;
-  --bg:#ece5dd;
-  --me:#dcf8c6;
-  --other:#fff;
+<html lang="id">  
+<head>  
+<meta charset="UTF-8" />  
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.5">  
+<link rel="manifest" href="manifest.json">  <!-- Highlight.js CSS & JS -->  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">  
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>  
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/javascript.min.js"></script>  
+<script>hljs.highlightAll();</script>  <title>CatBot PWA</title>  
+<style>  
+:root{  
+  --wa-green:#075e54;  
+  --bg:#ece5dd;  
+  --me:#dcf8c6;  
+  --other:#fff;  
+}  /* ===== Body & Header ===== */
+body {
+margin:0;
+font-family: Segoe UI, sans-serif;
+background: var(--bg);
+font-size: 18px;
 }
-body { margin:0; font-family: Segoe UI, sans-serif; background: var(--bg); font-size: 16px; }
 header {
-  display:flex; align-items:center; justify-content:space-between;
-  background: var(--wa-green); color:#fff; padding:10px 12px;
-  position:sticky; top:0; z-index:10;
+display:flex;
+align-items:center;
+justify-content:space-between;
+background: var(--wa-green);
+color:#fff;
+padding:10px 12px;
+position:sticky;
+top:0;
+z-index:10;
 }
 .left { display:flex; align-items:center; gap:10px }
 header img { width:40px; height:40px; border-radius:50% }
+.title { line-height:1 }
 .title b { display:block; font-size:16px }
 .title small { opacity:.8 }
 .actions { display:flex; align-items:center; gap:8px }
-.chip { font-size:12px; padding:6px 10px; border-radius:999px; background:#ffffff26; cursor:pointer }
+.chip {
+font-size:12px;
+padding:6px 10px;
+border-radius:999px;
+background:#ffffff26;
+cursor:pointer;
+user-select:none;
+}
 .fab { background:none; border:none; color:#fff; font-size:22px; cursor:pointer }
 
-/* Chat */
-#chat { padding:12px; min-height: calc(100vh - 120px); display:flex; flex-direction:column; gap:8px; overflow-y:auto; }
-.msg { max-width:80%; padding:10px 12px; border-radius:10px; box-shadow:0 1px 1px #0001; word-wrap:break-word; position:relative; font-size:16px; white-space: pre-line; line-height:1.5; }
+/* ===== Chat ===== */
+#chat {
+padding:12px;
+min-height: calc(100vh - 120px);
+display:flex;
+flex-direction:column;
+gap:8px;
+overflow-y:auto;
+}
+.msg {
+max-width:80%;
+padding:10px 12px;
+border-radius:10px;
+box-shadow:0 1px 1px #0001;
+word-wrap:break-word;
+position:relative;
+font-size:18px;
+
+white-space: pre-line;  /* <- ini biar \n jadi baris baru /
+line-height: 1.6;       / <- jarak antar kalimat lebih enak */
+}
 .user { align-self:flex-end; background:var(--me); border-top-right-radius:4px }
 .bot { align-self:flex-start; background:var(--other); border-top-left-radius:4px }
-.copyBtn { position:absolute; top:4px; right:4px; background:none; border:none; font-size:14px; cursor:pointer; opacity:0; transition:opacity .2s; }
+.meta { margin-top:4px; font-size:11px; opacity:.65; text-align:right }
+.copyBtn {
+position: absolute;
+top: 4px;
+right: 4px;
+background: none;
+border: none;
+font-size: 14px;
+cursor: pointer;
+opacity: 0;
+transition: opacity .2s;
+}
 .msg:hover .copyBtn { opacity:0.7 }
+.msg:hover .copyBtn:hover { opacity:1 }
 
-/* Footer */
-footer { position:sticky; bottom:0; background:#fff; border-top:1px solid #0001; padding:10px; }
+/* ===== Footer ===== */
+footer {
+position:sticky;
+bottom:0;
+background:#fff;
+border-top:1px solid #0001;
+padding:10px;
+}
 .row { display:flex; gap:8px; align-items:center }
-#prompt { flex:1; resize:none; height:42px; padding:10px; border:1px solid #0002; border-radius:22px; font-size:16px; }
-.send { background:var(--wa-green); color:#fff; border:none; border-radius:50%; width:42px; height:42px; cursor:pointer; }
-.clear { background:#eee; border:none; border-radius:50px; padding:0 12px; font-size:13px; cursor:pointer }
+#prompt {
+flex:1;
+resize:none;
+height:42px;
+padding:10px;
+border:1px solid #0002;
+border-radius:22px;
+font-size:18px;
+}
+.send {
+background:var(--wa-green);
+color:#fff;
+border:none;
+border-radius:50%;
+width:42px; height:42px;
+cursor:pointer;
+}
+.clear {
+background:#eee;
+border:none;
+border-radius:50px;
+padding:0 12px;
+font-size:13px;
+cursor:pointer;
+}
 
-/* Menu Popup */
-.menu-popup { position:absolute; top:50px; right:10px; background:#fff; border:1px solid #ccc; border-radius:5px; display:none; flex-direction:column; min-width:150px; z-index:1002; }
+/* ===== Popup API / Settings ===== */
+#popup {
+display: none;
+position: fixed;
+top: 10px;
+right: 10px;
+width: min(92vw, 320px);
+max-height: 80vh;
+overflow-y: auto;
+background: #fff;
+border-radius: 12px;
+padding: 10px;
+z-index: 100;
+box-shadow: 0 10px 30px rgba(0,0,0,.4);
+}
+#popup.active { display:block }
+#popup .card { display:flex; flex-direction:column; gap:10px; position:relative }
+#popup h3 { margin:0 0 10px }
+.closeX {
+position: sticky;
+top: 0;
+right: 0;
+background:none;
+border:none;
+font-size:18px;
+cursor:pointer;
+z-index:110;
+}
+
+/* ===== Popup Media ===== */
+#mediaPopup {
+display:none;
+position: absolute;
+bottom: 20px;
+left:50%;
+transform:translateX(-50%);
+width:min(92vw,360px);
+max-height:60vh;
+overflow-y:auto;
+background:#fff;
+border-radius:12px;
+padding:12px;
+z-index:90;
+box-shadow: 0 8px 20px rgba(0,0,0,.3);
+}
+#mediaPopup.active { display:block }
+.popupContent {
+display:flex;
+flex-direction:column;
+gap:8px;
+}
+.mediaBtn {
+padding:10px;
+border-radius:8px;
+background:#eee;
+text-align:left;
+cursor:pointer;
+}
+.closePopup {
+position:sticky;
+top:0;
+margin-top:8px;
+padding:6px;
+border:none;
+background:#ddd;
+border-radius:8px;
+cursor:pointer;
+}
+
+/* ===== Grid Form ===== */
+.grid { display:grid; grid-template-columns:1fr 1fr; gap:10px }
+.grid .col-2 { grid-column:1/-1 }
+label { font-size:12px; opacity:.85 }
+input, select { width:100%; padding:8px; border:1px solid #0002; border-radius:8px; margin-top:4px }
+.note { font-size:12px; opacity:.8; margin:6px 0 10px }
+.btnRow { display:flex; gap:8px; margin-top:10px }
+.btn { flex:1; padding:10px; border:none; border-radius:8px; cursor:pointer }
+.primary { background:var(--wa-green); color:#fff }
+.danger { background:#eee
+}
+
+.toast {
+position: fixed;
+bottom: 20px;
+right: 20px;
+background-color: #333;
+color: #fff;
+padding: 10px 20px;
+border-radius: 5px;
+opacity: 1;
+transition: opacity 0.5s ease-out; /* Animasi saat hilang */
+}
+
+.toast.fade-out {
+opacity: 0;
+}
+
+.menu-popup {
+position:absolute; top:50px; right:10px; background:#fff; border:1px solid #ccc; border-radius:5px; display:none; flex-direction:column; min-width:150px;
+z-index:1002;
+}
 .menu-popup.show { display:flex; }
-.menu-popup button, .menu-popup label { padding:10px; text-align:left; border:none; background:none; width:100%; cursor:pointer; font-size:14px; color:#000; }
+.menu-popup button, .menu-popup label { padding:10px; text-align:left; border:none; background:none; width:100%; cursor:pointer; font-size:18px; color:#000; }
 .menu-popup button:hover, .menu-popup label:hover { background:#f0f0f0; }
 
-/* Modal */
-.modal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); justify-content:center; align-items:center; z-index:2000; }
-.modal > div { background:#fff; padding:20px; border-radius:10px; width:90%; max-width:400px; position:relative; }
-.modal h3 { margin-top:0; }
-</style>
-</head>
 
-<body>
-<header>
-  <div class="left">
-    <img src="https://i.pravatar.cc/100?img=47" alt="cewe">
-    <div class="title"><b>CatBot</b><small id="status">online</small></div>
-  </div>
-  <span onclick="toggleMenu()">⋮</span>
-  <div id="menuPopup" class="menu-popup">
-    <label>Upload Data
-      <input type="file" accept="application/json" onchange="uploadData(event)" style="display:none;">
-    </label>
-    <button onclick="downloadData()">Download Data</button>
-    <button onclick="openEditData()">Edit Data</button>
-    <button onclick="openSettings()">Pengaturan API</button>
-  </div>
-  <div class="actions">
-    <span id="providerBadge" class="chip">Local</span>
-    <button id="openPopup" class="fab">+</button>
-  </div>
-</header>
+</style>  
+</head>  <body>  
+<header>  
+  <div class="left">  
+    <img src="https://i.pravatar.cc/100?img=47" alt="cewe">  
+    <div class="title"><b>CatBot</b><small id="status">online</small></div>  
+  </div>  <span onclick="toggleMenu()">⋮</span>
 
-<main id="chat"></main>
-
-<footer>
-  <div class="row">
-    <button id="btnClear" class="clear">=</button>
-    <textarea id="prompt" placeholder="Tulis pesan"></textarea>
-    <button id="btnSend" class="send">➤</button>
-  </div>
-</footer>
-
-<!-- Modal Edit Rules -->
-<div id="modalEdit" class="modal">
-  <div>
-    <h3>Edit Rules</h3>
-    <textarea id="editArea" style="width:100%;height:200px;"></textarea>
-    <div style="margin-top:10px; text-align:right;">
-      <button onclick="saveRules()">Simpan</button>
-      <button onclick="closeModal('modalEdit')">Tutup</button>
-    </div>
-  </div>
-</div>
-
-<!-- Modal Settings -->
-<div id="modalSettings" class="modal">
-  <div>
-    <button onclick="closeModal('modalSettings')" style="position:absolute;top:10px;right:10px;border:none;background:none;font-size:20px;cursor:pointer">✖</button>
-    <h3>⚙️ Pengaturan API</h3>
-
-    <label>Provider:</label>
-    <select id="providerSel" style="width:100%; padding:8px; margin-bottom:10px;">
-      <option value="local">Local (Rules)</option>
-      <option value="gemini">Gemini</option>
-      <option value="openai">OpenAI</option>
-    </select>
-
-    <label>System Prompt:</label>
-    <textarea id="systemPrompt" style="width:100%;height:60px;margin-bottom:10px;"></textarea>
-
-    <h4>🔑 Gemini</h4>
-    <input id="geminiKey" placeholder="API Key Gemini" style="width:100%;padding:8px;margin-bottom:6px;">
-    <input id="geminiModel" value="gemini-1.5-flash" style="width:100%;padding:8px;margin-bottom:6px;">
-    <input id="gemTemp" type="number" value="1" step="0.1" style="width:100%;padding:8px;margin-bottom:10px;">
-
-    <h4>🔑 OpenAI</h4>
-    <input id="openaiKey" placeholder="API Key OpenAI" style="width:100%;padding:8px;margin-bottom:6px;">
-    <input id="openaiModel" value="gpt-4o-mini" style="width:100%;padding:8px;margin-bottom:6px;">
-    <input id="oaTemp" type="number" value="1" step="0.1" style="width:100%;padding:8px;margin-bottom:10px;">
-
-    <div style="display:flex;gap:10px;justify-content:flex-end;">
-      <button id="btnSave">Simpan</button>
-    </div>
-  </div>
-</div>
-
-<script>
-let rules = JSON.parse(localStorage.getItem("botRules") || "[]");
-let provider = localStorage.getItem("provider") || "local";
-
-// UI
-function addMessage(txt, who="bot"){
-  const chat = document.getElementById("chat");
-  const div = document.createElement("div");
-  div.className = "msg " + who;
-  div.innerHTML = txt;
-  chat.appendChild(div);
-  chat.scrollTop = chat.scrollHeight;
-}
-function toggleMenu(){ document.getElementById("menuPopup").classList.toggle("show"); }
-function closeModal(id){ document.getElementById(id).style.display="none"; }
-function openEditData(){
-  document.getElementById("editArea").value = JSON.stringify(rules, null, 2);
-  document.getElementById("modalEdit").style.display="flex";
-}
-function saveRules(){
-  try{
-    rules = JSON.parse(document.getElementById("editArea").value);
-    localStorage.setItem("botRules", JSON.stringify(rules));
-    closeModal("modalEdit");
-    alert("Rules tersimpan!");
-  }catch(e){ alert("Format JSON salah!"); }
-}
-function openSettings(){
-  document.getElementById("providerSel").value = provider;
-  document.getElementById("systemPrompt").value = localStorage.getItem("systemPrompt")||"";
-  document.getElementById("geminiKey").value = localStorage.getItem("geminiKey")||"";
-  document.getElementById("openaiKey").value = localStorage.getItem("openaiKey")||"";
-  document.getElementById("modalSettings").style.display="flex";
-}
-document.getElementById("btnSave").onclick = ()=>{
-  provider = document.getElementById("providerSel").value;
-  localStorage.setItem("provider", provider);
-  localStorage.setItem("systemPrompt", document.getElementById("systemPrompt").value);
-  localStorage.setItem("geminiKey", document.getElementById("geminiKey").value);
-  localStorage.setItem("openaiKey", document.getElementById("openaiKey").value);
-  document.getElementById("providerBadge").innerText = provider;
-  closeModal("modalSettings");
-};
-
-// Chat logic
-function sendMessage(txt){
-  addMessage(txt,"user");
-  if(provider==="local"){
-    let found = rules.find(r=>r.Tanya.toLowerCase()===txt.toLowerCase());
-    if(found){
-      let jawab = Array.isArray(found.Jawab)? found.Jawab[Math.floor(Math.random()*found.Jawab.length)] : found.Jawab;
-      addMessage(jawab,"bot");
-    }else{
-      addMessage("❓ Tidak ada jawaban. Tambahkan via Edit Data.","bot");
-    }
-  }else{
-    addMessage("⏳ Tunggu jawaban dari "+provider,"bot");
-  }
-}
-document.getElementById("btnSend").onclick=()=>{
-  const txt=document.getElementById("prompt").value.trim();
-  if(txt){ document.getElementById("prompt").value=""; sendMessage(txt); }
-};
-document.getElementById("btnClear").onclick=()=>{ document.getElementById("chat").innerHTML=""; };
-
-// init
-document.getElementById("providerBadge").innerText = provider;
-
-
-// ===== Popup menu =====
-function toggleMenu() {
-  document.getElementById("menuPopup").classList.toggle("show");
-}
-
-document.addEventListener("click", function(event) {
-  const menu = document.getElementById("menuPopup");
-  const tombol = event.target.closest("header span"); 
-  if (!tombol && !menu.contains(event.target)) {
-    menu.classList.remove("show");
-  }
-}); 
-</script>
-</body>
-</html>
+ <div id="menuPopup" class="menu-popup">  
+  <label>Upload Data  
+    <input type="file" accept="application/json" onchange="uploadData(event)" style="display:none;">  
+  </label>  
+  <button onclick="downloadData()">Download Data</button>  
+  <button onclick="switchMode()">Edit Data</button>  
+</div>    <div class="actions">  
+    <span id="providerBadge" class="chip" title="Klik untuk ganti provider">Gemini</span>  
+    <button id="openPopup" class="fab" title="API Keys">+</button>  
+  </div>  
+</header>  <main id="chat"></main>  <footer>  
+  <div class="row">  
+    <button id="btnClear" class="clear">=</button>  
+    <textarea id="prompt" placeholder="Tulis pesan"></textarea>  
+    <button id="btnSend" class="send">></button>  
+  </div>  
+</footer>  <div id="mediaPopup" class="popup">  
+  <div class="popupContent">  
+    <div class="mediaBtn" id="btnCamera">Kamera</div>  
+    <div class="mediaBtn" id="btnPhoto">Foto</div>  
+    <div class="mediaBtn" id="btnFile"> File</div>  
+    <div class="mediaBtn" id="btnClearChat">Clear Chat</div>  
+    <button class="closePopup">â</button>  
+  </div>  
+</div>  <div id="popup" aria-hidden="true">  
+  <div class="card" role="dialog" aria-modal="true" aria-labelledby="ttl">  
+    <button id="closePopup" class="closeX">â</button>  
+    <h3 id="ttl">Pengaturan & API Keys</h3>  
+    <p class="note">Kunci disimpan lokal di <code>localStorage</code>. Gunakan server proxy untuk produksi.</p>  
+    <div class="grid">  
+      <div class="col-2">  
+        <label for="providerSel">Provider aktif</label>  
+        <select id="providerSel">  
+          <option value="gemini">Gemini</option>  
+          <option value="openai">OpenAI</option>  
+        </select>  
+      </div>  
+      <div class="col-2">  
+        <label for="systemPrompt">System prompt (opsional)</label>  
+        <input id="systemPrompt" placeholder="mis: jawab singkat, bahasa Indonesia">  
+      </div>  
+      <div class="col-2" style="margin-top:6px"><b> Gemini</b></div>  
+      <div class="col-2">  
+        <label for="geminiKey">Gemini API Key</label>  
+        <input id="geminiKey" type="password" placeholder="AI...">  
+      </div>  
+      <div>  
+        <label for="geminiModel">Model</label>  
+        <select id="geminiModel">  
+          <option value="gemini-1.5-flash">gemini-1.5-flash</option>  
+          <option value="gemini-1.5-pro">gemini-1.5-pro</option>  
+        </select>  
+      </div>  
+      <div>  
+        <label for="gemTemp">Temperature</label>  
+        <input id="gemTemp" type="number" step="0.1" min="0" max="2" value="1">  
+      </div>  
+      <div class="col-2" style="margin-top:6px"><b> OpenAI</b></div>  
+      <div class="col-2">  
+        <label for="openaiKey">OpenAI API Key</label>  
+        <input id="openaiKey" type="password" placeholder="sk-...">  
+      </div>  
+      <div>  
+        <label for="openaiModel">Model</label>  
+        <select id="openaiModel">  
+          <option value="gpt-4o-mini">gpt-4o-mini</option>  
+          <option value="gpt-4o">gpt-4o</option>  
+          <option value="gpt-4.1-mini">gpt-4.1-mini</option>  
+        </select>  
+      </div>  
+      <div>  
+        <label for="oaTemp">Temperature</label>  
+        <input id="oaTemp" type="number" step="0.1" min="0" max="2" value="1">  
+      </div>  
+    </div>  
+    <div class="btnRow">  
+      <button id="btnSave" class="btn primary">Simpan</button>  
+      <button id="btnWipe" class="btn danger">Hapus Lokal</button>  
+    </div>  
+  </div>  
+<script src="script.js"></script>  
+<script>  
+    
+    
+    
+  // ===== Popup menu =====  
+function toggleMenu() {  
+  document.getElementById("menuPopup").classList.toggle("show");  
+}  
+  
+document.addEventListener("click", function(event) {  
+  const menu = document.getElementById("menuPopup");  
+  const tombol = event.target.closest("header span");   
+  if (!tombol && !menu.contains(event.target)) {  
+    menu.classList.remove("show");  
+  }  
+});   
+</script>  </body>  
+</html>  
